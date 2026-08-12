@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Download, List } from "lucide-react";
 import { z } from "zod";
-import { useBible } from "@/components/bible-provider";
+import { TRANSLATIONS, useBible } from "@/components/bible-provider";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -142,7 +142,7 @@ function Reader() {
             <SelectContent>
               {installed.map((id) => (
                 <SelectItem key={id} value={id}>
-                  {id.toUpperCase().replace("_", " ")}
+                  {TRANSLATIONS.find((t) => t.id === id)?.abbr ?? id}
                 </SelectItem>
               ))}
             </SelectContent>
