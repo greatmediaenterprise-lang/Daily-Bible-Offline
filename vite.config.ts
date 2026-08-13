@@ -23,7 +23,13 @@ export default defineConfig({
         manifest: false,
         workbox: {
           globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+          // Precache the server-rendered app shell so any route works offline.
+          additionalManifestEntries: [{ url: "/", revision: `${Date.now()}` }],
+          navigateFallback: "/",
           navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//],
+          cleanupOutdatedCaches: true,
+          clientsClaim: true,
+          skipWaiting: true,
           runtimeCaching: [
             {
               urlPattern: ({ request }: { request: Request }) => request.mode === "navigate",
@@ -31,11 +37,33 @@ export default defineConfig({
               options: { cacheName: "pages", networkTimeoutSeconds: 4 },
             },
             {
+              urlPattern: ({ url }: { url: URL }) =>
+                url.origin === "https://fonts.googleapis.com",
+              handler: "StaleWhileRevalidate",
+              options: { cacheName: "font-css" },
+            },
+            {
               urlPattern: ({ url }: { url: URL }) => url.origin === "https://fonts.gstatic.com",
               handler: "CacheFirst",
               options: {
                 cacheName: "fonts",
                 expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
+                cacheableResponse: { statuses: [0, 200] },
+              },
+            },
+            {
+              // Same-origin build assets (hashed) — safe to serve cache-first offline.
+              urlPattern: ({ url, request }: { url: URL; request: Request }) =>
+                url.origin === self.location.origin &&
+                (request.destination === "script" ||
+                  request.destination === "style" ||
+                  request.destination === "font" ||
+                  request.destination === "image"),
+              handler: "CacheFirst",
+              options: {
+                cacheName: "assets",
+                expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
+                cacheableResponse: { statuses: [0, 200] },
               },
             },
           ],
@@ -44,3 +72,4 @@ export default defineConfig({
     ],
   },
 });
+
