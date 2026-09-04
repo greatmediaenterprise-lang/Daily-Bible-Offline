@@ -195,18 +195,84 @@ function Reader() {
             </SheetContent>
           </Sheet>
 
-          <Select value={activeId ?? ""} onValueChange={(v) => void setActive(v)}>
-            <SelectTrigger className="ml-auto h-9 w-[7.5rem]">
-              <SelectValue placeholder="Version" />
-            </SelectTrigger>
-            <SelectContent>
-              {installed.map((id) => (
-                <SelectItem key={id} value={id}>
-                  {TRANSLATIONS.find((t) => t.id === id)?.abbr ?? id}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="ml-auto flex items-center gap-1.5">
+            <Button
+              variant={compareOn ? "default" : "secondary"}
+              size="sm"
+              onClick={toggleCompareOn}
+              aria-pressed={compareOn}
+              title="Read several versions side by side"
+            >
+              <Columns2 className="size-4" />
+              <span className="hidden sm:inline">Compare</span>
+            </Button>
+
+            {compareOn ? (
+              <Sheet open={versionsOpen} onOpenChange={setVersionsOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="secondary" size="sm">
+                    Versions ({shownIds.length})
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[85vw] max-w-xs overflow-y-auto">
+                  <SheetHeader>
+                    <SheetTitle className="font-scripture text-2xl">Compare versions</SheetTitle>
+                  </SheetHeader>
+                  <p className="px-1 text-xs text-muted-foreground">
+                    Pick any of your downloaded versions to read together, verse by verse.
+                  </p>
+                  <div className="mt-4 space-y-2 px-1 pb-10">
+                    {installed.map((id) => {
+                      const info = TRANSLATIONS.find((t) => t.id === id);
+                      const selected = shownIds.includes(id);
+                      return (
+                        <button
+                          key={id}
+                          onClick={() => (id === activeId ? undefined : toggleCompareId(id))}
+                          disabled={id === activeId}
+                          className={cn(
+                            "flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition-colors",
+                            selected
+                              ? "border-gold bg-accent"
+                              : "border-border hover:border-gold/60",
+                            id === activeId && "opacity-70",
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "flex size-4 items-center justify-center rounded-sm border",
+                              selected ? "border-gold bg-gold text-background" : "border-border",
+                            )}
+                          >
+                            {selected && "✓"}
+                          </span>
+                          <span>
+                            <span className="font-medium">{info?.abbr ?? id}</span>{" "}
+                            <span className="text-muted-foreground">
+                              {id === activeId ? "(main)" : (info?.name ?? "")}
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            ) : (
+              <Select value={activeId ?? ""} onValueChange={(v) => void setActive(v)}>
+                <SelectTrigger className="h-9 w-[7.5rem]">
+                  <SelectValue placeholder="Version" />
+                </SelectTrigger>
+                <SelectContent>
+                  {installed.map((id) => (
+                    <SelectItem key={id} value={id}>
+                      {TRANSLATIONS.find((t) => t.id === id)?.abbr ?? id}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
         </div>
       </header>
 
