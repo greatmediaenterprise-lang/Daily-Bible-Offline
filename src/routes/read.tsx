@@ -50,6 +50,62 @@ function Reader() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: "/read" });
   const [booksOpen, setBooksOpen] = useState(false);
+  const [versionsOpen, setVersionsOpen] = useState(false);
+
+  const [compareOn, setCompareOn] = useState(
+    () => typeof window !== "undefined" && localStorage.getItem(COMPARE_ON_KEY) === "1",
+  );
+  const [compareIds, setCompareIds] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      return JSON.parse(localStorage.getItem(COMPARE_KEY) ?? "[]") as string[];
+    } catch {
+      return [];
+    }
+  });
+  const [compareBibles, setCompareBibles] = useState<Record<string, StoredBible>>({});
+
+  // Versions shown in compare mode (active one always included)
+  const shownIds = useMemo(() => {
+    const ids = compareOn ? compareIds.filter((id) => installed.includes(id)) : [];
+    const list = activeId ? [activeId, ...ids.filter((i) => i !== activeId)] : ids;
+    return compareOn ? list : activeId ? [activeId] : [];
+  }, [compareOn, compareIds, installed, activeId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const missing = shownIds.filter((id) => !compareBibles[id]);
+      if (missing.length === 0) return;
+      const loaded = await Promise.all(missing.map((id) => loadTranslation(id)));
+      if (cancelled) return;
+      setCompareBibles((prev) => {
+        const next = { ...prev };
+        missing.forEach((id, i) => {
+          if (loaded[i]) next[id] = loaded[i]!;
+        });
+        return next;
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [shownIds, compareBibles]);
+
+  const toggleCompareId = (id: string) => {
+    setCompareIds((prev) => {
+      const next = prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id];
+      localStorage.setItem(COMPARE_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const toggleCompareOn = () => {
+    setCompareOn((prev) => {
+      localStorage.setItem(COMPARE_ON_KEY, prev ? "0" : "1");
+      return !prev;
+    });
+  };
 
   const bookId = search.book ?? bible?.books[0]?.id;
   const chapterNo = search.chapter ?? 1;
