@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Download, List } from "lucide-react";
+import { ChevronLeft, ChevronRight, Columns2, Download, List } from "lucide-react";
 import { z } from "zod";
 import { TRANSLATIONS, useBible } from "@/components/bible-provider";
+import { loadTranslation, type StoredBible } from "@/lib/bible";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -13,6 +14,9 @@ import {
 } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+
+const COMPARE_KEY = "daily-bible:compare";
+const COMPARE_ON_KEY = "daily-bible:compare-on";
 
 const searchSchema = z.object({
   book: z.string().optional(),
@@ -46,6 +50,62 @@ function Reader() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: "/read" });
   const [booksOpen, setBooksOpen] = useState(false);
+  const [versionsOpen, setVersionsOpen] = useState(false);
+
+  const [compareOn, setCompareOn] = useState(
+    () => typeof window !== "undefined" && localStorage.getItem(COMPARE_ON_KEY) === "1",
+  );
+  const [compareIds, setCompareIds] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      return JSON.parse(localStorage.getItem(COMPARE_KEY) ?? "[]") as string[];
+    } catch {
+      return [];
+    }
+  });
+  const [compareBibles, setCompareBibles] = useState<Record<string, StoredBible>>({});
+
+  // Versions shown in compare mode (active one always included)
+  const shownIds = useMemo(() => {
+    const ids = compareOn ? compareIds.filter((id) => installed.includes(id)) : [];
+    const list = activeId ? [activeId, ...ids.filter((i) => i !== activeId)] : ids;
+    return compareOn ? list : activeId ? [activeId] : [];
+  }, [compareOn, compareIds, installed, activeId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const missing = shownIds.filter((id) => !compareBibles[id]);
+      if (missing.length === 0) return;
+      const loaded = await Promise.all(missing.map((id) => loadTranslation(id)));
+      if (cancelled) return;
+      setCompareBibles((prev) => {
+        const next = { ...prev };
+        missing.forEach((id, i) => {
+          if (loaded[i]) next[id] = loaded[i]!;
+        });
+        return next;
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [shownIds, compareBibles]);
+
+  const toggleCompareId = (id: string) => {
+    setCompareIds((prev) => {
+      const next = prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id];
+      localStorage.setItem(COMPARE_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const toggleCompareOn = () => {
+    setCompareOn((prev) => {
+      localStorage.setItem(COMPARE_ON_KEY, prev ? "0" : "1");
+      return !prev;
+    });
+  };
 
   const bookId = search.book ?? bible?.books[0]?.id;
   const chapterNo = search.chapter ?? 1;
@@ -135,18 +195,84 @@ function Reader() {
             </SheetContent>
           </Sheet>
 
-          <Select value={activeId ?? ""} onValueChange={(v) => void setActive(v)}>
-            <SelectTrigger className="ml-auto h-9 w-[7.5rem]">
-              <SelectValue placeholder="Version" />
-            </SelectTrigger>
-            <SelectContent>
-              {installed.map((id) => (
-                <SelectItem key={id} value={id}>
-                  {TRANSLATIONS.find((t) => t.id === id)?.abbr ?? id}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="ml-auto flex items-center gap-1.5">
+            <Button
+              variant={compareOn ? "default" : "secondary"}
+              size="sm"
+              onClick={toggleCompareOn}
+              aria-pressed={compareOn}
+              title="Read several versions side by side"
+            >
+              <Columns2 className="size-4" />
+              <span className="hidden sm:inline">Compare</span>
+            </Button>
+
+            {compareOn ? (
+              <Sheet open={versionsOpen} onOpenChange={setVersionsOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="secondary" size="sm">
+                    Versions ({shownIds.length})
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[85vw] max-w-xs overflow-y-auto">
+                  <SheetHeader>
+                    <SheetTitle className="font-scripture text-2xl">Compare versions</SheetTitle>
+                  </SheetHeader>
+                  <p className="px-1 text-xs text-muted-foreground">
+                    Pick any of your downloaded versions to read together, verse by verse.
+                  </p>
+                  <div className="mt-4 space-y-2 px-1 pb-10">
+                    {installed.map((id) => {
+                      const info = TRANSLATIONS.find((t) => t.id === id);
+                      const selected = shownIds.includes(id);
+                      return (
+                        <button
+                          key={id}
+                          onClick={() => (id === activeId ? undefined : toggleCompareId(id))}
+                          disabled={id === activeId}
+                          className={cn(
+                            "flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition-colors",
+                            selected
+                              ? "border-gold bg-accent"
+                              : "border-border hover:border-gold/60",
+                            id === activeId && "opacity-70",
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "flex size-4 items-center justify-center rounded-sm border",
+                              selected ? "border-gold bg-gold text-background" : "border-border",
+                            )}
+                          >
+                            {selected && "✓"}
+                          </span>
+                          <span>
+                            <span className="font-medium">{info?.abbr ?? id}</span>{" "}
+                            <span className="text-muted-foreground">
+                              {id === activeId ? "(main)" : (info?.name ?? "")}
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            ) : (
+              <Select value={activeId ?? ""} onValueChange={(v) => void setActive(v)}>
+                <SelectTrigger className="h-9 w-[7.5rem]">
+                  <SelectValue placeholder="Version" />
+                </SelectTrigger>
+                <SelectContent>
+                  {installed.map((id) => (
+                    <SelectItem key={id} value={id}>
+                      {TRANSLATIONS.find((t) => t.id === id)?.abbr ?? id}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
         </div>
       </header>
 
@@ -159,14 +285,40 @@ function Reader() {
               {book?.name} <span className="text-gold">{chapterNo}</span>
             </h1>
             <div className="gilt-rule mt-4 w-24" />
-            <div className="scripture mt-6 space-y-3 text-foreground">
-              {verses.map((v, i) => (
-                <p key={i}>
-                  <span className="verse-num">{i + 1}</span>
-                  {v}
-                </p>
-              ))}
-            </div>
+            {compareOn ? (
+              <div className="scripture mt-6 space-y-6 text-foreground">
+                {verses.map((_, i) => (
+                  <div key={i} className="space-y-1.5">
+                    {shownIds.map((id) => {
+                      const b = id === activeId ? bible : compareBibles[id];
+                      const text = b?.books
+                        .find((bk) => bk.id === book?.id)
+                        ?.chapters[chapterNo - 1]?.[i];
+                      if (!text) return null;
+                      const abbr = TRANSLATIONS.find((t) => t.id === id)?.abbr ?? id;
+                      return (
+                        <p key={id}>
+                          {id === activeId && <span className="verse-num">{i + 1}</span>}
+                          <span className="mr-1.5 rounded bg-muted px-1 py-0.5 align-middle text-[0.6rem] font-semibold uppercase tracking-wide text-muted-foreground">
+                            {abbr}
+                          </span>
+                          {text}
+                        </p>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="scripture mt-6 space-y-3 text-foreground">
+                {verses.map((v, i) => (
+                  <p key={i}>
+                    <span className="verse-num">{i + 1}</span>
+                    {v}
+                  </p>
+                ))}
+              </div>
+            )}
           </>
         )}
 
