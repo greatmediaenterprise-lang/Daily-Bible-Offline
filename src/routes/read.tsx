@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Download, List } from "lucide-react";
+import { ChevronLeft, ChevronRight, Columns2, Download, List } from "lucide-react";
 import { z } from "zod";
 import { TRANSLATIONS, useBible } from "@/components/bible-provider";
+import { loadTranslation, type StoredBible } from "@/lib/bible";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -13,6 +14,9 @@ import {
 } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+
+const COMPARE_KEY = "daily-bible:compare";
+const COMPARE_ON_KEY = "daily-bible:compare-on";
 
 const searchSchema = z.object({
   book: z.string().optional(),
