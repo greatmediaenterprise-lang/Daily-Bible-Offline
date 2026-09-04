@@ -285,14 +285,40 @@ function Reader() {
               {book?.name} <span className="text-gold">{chapterNo}</span>
             </h1>
             <div className="gilt-rule mt-4 w-24" />
-            <div className="scripture mt-6 space-y-3 text-foreground">
-              {verses.map((v, i) => (
-                <p key={i}>
-                  <span className="verse-num">{i + 1}</span>
-                  {v}
-                </p>
-              ))}
-            </div>
+            {compareOn ? (
+              <div className="scripture mt-6 space-y-6 text-foreground">
+                {verses.map((_, i) => (
+                  <div key={i} className="space-y-1.5">
+                    {shownIds.map((id) => {
+                      const b = id === activeId ? bible : compareBibles[id];
+                      const text = b?.books
+                        .find((bk) => bk.id === book?.id)
+                        ?.chapters[chapterNo - 1]?.[i];
+                      if (!text) return null;
+                      const abbr = TRANSLATIONS.find((t) => t.id === id)?.abbr ?? id;
+                      return (
+                        <p key={id}>
+                          {id === activeId && <span className="verse-num">{i + 1}</span>}
+                          <span className="mr-1.5 rounded bg-muted px-1 py-0.5 align-middle text-[0.6rem] font-semibold uppercase tracking-wide text-muted-foreground">
+                            {abbr}
+                          </span>
+                          {text}
+                        </p>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="scripture mt-6 space-y-3 text-foreground">
+                {verses.map((v, i) => (
+                  <p key={i}>
+                    <span className="verse-num">{i + 1}</span>
+                    {v}
+                  </p>
+                ))}
+              </div>
+            )}
           </>
         )}
 
