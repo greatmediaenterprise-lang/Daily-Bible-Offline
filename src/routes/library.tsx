@@ -116,10 +116,13 @@ function Library() {
           <WifiOff className="size-4" /> About versions
         </p>
         <p className="mt-2">
-          NIV and The Message are commercially licensed and cannot legally be downloaded or
-          distributed inside an app, so they are not offered here. Every translation above is
-          freely licensed and includes the whole Bible.
+          NIV, NKJV, NLT, Amplified, Good News and The Message are commercially licensed, so they
+          cannot legally be downloaded or distributed inside an app. The closest freely licensed
+          equivalents are included instead: BSB and NET (modern wording like NKJV/NLT), T4T
+          (amplified, explains implied meaning), FBV (easy-to-read like ERV/GNT) and PEV (very
+          plain, pidgin-style English). Every translation above is free and complete.
         </p>
+
       </div>
     </div>
   );

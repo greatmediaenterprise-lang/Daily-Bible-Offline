@@ -16,11 +16,18 @@ export type TranslationInfo = {
  */
 export const TRANSLATIONS: TranslationInfo[] = [
   { id: "eng_kjv", abbr: "KJV", name: "King James Version", language: "English", approxMB: 5 },
+  { id: "eng_cpb", abbr: "KJV-P", name: "KJV Cambridge Paragraph (modernised spelling)", language: "English", approxMB: 5 },
+  { id: "BSB", abbr: "BSB", name: "Berean Standard Bible (modern, NKJV/NLT-style)", language: "English", approxMB: 5 },
+  { id: "eng_net", abbr: "NET", name: "NET Bible (contemporary)", language: "English", approxMB: 6 },
+  { id: "eng_t4t", abbr: "T4T", name: "Translation for Translators (amplified meaning)", language: "English", approxMB: 6 },
+  { id: "eng_fbv", abbr: "FBV", name: "Free Bible Version (easy-to-read)", language: "English", approxMB: 5 },
+  { id: "eng_pev", abbr: "PEV", name: "Plain English Version (simple / pidgin-style)", language: "English", approxMB: 4 },
   { id: "eng_asv", abbr: "ASV", name: "American Standard Version", language: "English", approxMB: 5 },
   { id: "eng_web", abbr: "WEB", name: "World English Bible", language: "English", approxMB: 5 },
   { id: "eng_bbe", abbr: "BBE", name: "Bible in Basic English", language: "English", approxMB: 4 },
   { id: "eng_ylt", abbr: "YLT", name: "Young's Literal Translation", language: "English", approxMB: 5 },
   { id: "eng_dby", abbr: "DBY", name: "Darby Translation", language: "English", approxMB: 5 },
+
   { id: "yor_bib", abbr: "YOR", name: "Bíbélì Mímọ́ (Yorùbá Òde-Òní)", language: "Yorùbá", approxMB: 6 },
   { id: "ibo_bib", abbr: "IBO", name: "Baịbụlụ Nsọ nʼIgbo", language: "Igbo", approxMB: 6 },
   { id: "hau_bib", abbr: "HAU", name: "Littafi Mai Tsarki (Sabon Rai)", language: "Hausa", approxMB: 5 },
