@@ -93,7 +93,7 @@ function Library() {
                         onClick={async () => {
                           try {
                             await install(t);
-                            toast.success(`${t.abbr} ready offline`);
+                            toast.success(`${t.abbr} downloaded — ready offline`);
                           } catch {
                             toast.error("Download failed. Check your connection.");
                           }
