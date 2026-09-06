@@ -4,6 +4,7 @@ import { BookOpen, Download, Sparkles, WifiOff } from "lucide-react";
 import { useBible } from "@/components/bible-provider";
 import { verseOfTheDay } from "@/lib/bible";
 import { Button } from "@/components/ui/button";
+import { InstallApp } from "@/components/install-app";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -46,6 +47,13 @@ function Today() {
   return (
     <div className="mx-auto max-w-2xl px-5 pb-28 pt-8">
       <header className="text-center">
+        <img
+          src="/icons/icon-192.png"
+          alt="Daily Bible logo"
+          width={72}
+          height={72}
+          className="mx-auto size-[72px] rounded-2xl shadow-page"
+        />
         <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">{today}</p>
         <h1 className="mt-3 font-scripture text-4xl font-semibold tracking-tight">Daily Bible</h1>
         <div className="gilt-rule mx-auto mt-4 w-32" />
@@ -109,9 +117,7 @@ function Today() {
         </Link>
       </section>
 
-      <p className="mt-8 text-center text-xs leading-relaxed text-muted-foreground">
-        Install this app to your home screen for a full offline mobile experience.
-      </p>
+      <InstallApp />
     </div>
   );
 }

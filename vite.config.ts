@@ -23,8 +23,14 @@ export default defineConfig({
         manifest: false,
         workbox: {
           globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-          // Precache the server-rendered app shell so any route works offline.
-          additionalManifestEntries: [{ url: "/", revision: `${Date.now()}` }],
+          // Cache every entry URL on the first online visit. Each entry serves
+          // the same hydrated app shell and lets deep links open without data.
+          additionalManifestEntries: [
+            { url: "/", revision: null },
+            { url: "/read", revision: null },
+            { url: "/search", revision: null },
+            { url: "/library", revision: null },
+          ],
           navigateFallback: "/",
           navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//],
           cleanupOutdatedCaches: true,

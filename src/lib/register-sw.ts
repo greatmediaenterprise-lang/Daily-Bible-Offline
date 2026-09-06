@@ -31,7 +31,13 @@ export function registerServiceWorker() {
     return;
   }
 
-  window.addEventListener("load", () => {
-    void navigator.serviceWorker.register("/sw.js", { scope: "/" });
-  });
+  // This function is called from a React effect, which may run after the
+  // window load event. Register immediately so first-time mobile visitors do
+  // not miss the only event listener and leave without an offline app shell.
+  void navigator.serviceWorker
+    .register("/sw.js", { scope: "/", updateViaCache: "none" })
+    .then((registration) => registration.update())
+    .catch((error: unknown) => {
+      console.error("Daily Bible offline setup failed", error);
+    });
 }
