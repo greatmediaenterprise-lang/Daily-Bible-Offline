@@ -23,6 +23,11 @@ export default defineConfig({
         manifest: false,
         workbox: {
           globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+          // TanStack Start emits browser files inside client/, but Vercel
+          // serves them from the site root (for example /assets/app.js).
+          // Rewrite precache URLs to match the deployed public paths or the
+          // worker install fails on 404s and nothing is cached offline.
+          modifyURLPrefix: { "client/": "/" },
           // Cache every entry URL on the first online visit. Each entry serves
           // the same hydrated app shell and lets deep links open without data.
           additionalManifestEntries: [
